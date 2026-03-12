@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist
+build
+.eggs
+
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# Testing
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+.tox
+
+# Environment files (KABHI PUSH MAT KARNA!)
+.env
+.env.*
+*.env
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules
+npm-debug.log
+
+# Docker
+docker-compose.override.yml
+
+# Documentation
+docs/
+*.md
+README*
+
+# ML Model (bahut bada hai — alag handle karo)
+resources/
+*.h5
+*.keras
+*.pkl
+
+# Terraform (alag manage karo)
+.terraform
+*.tfstate
+*.tfstate.backup
+terraform.tfvars

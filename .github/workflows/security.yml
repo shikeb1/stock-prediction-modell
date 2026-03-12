@@ -1,0 +1,119 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+
+  # ============================================================
+  # Trivy — Docker Image Vulnerability Scan
+  # ============================================================
+  trivy-scan:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Backend Image for Scanning
+        run: |
+          docker build -t stock-backend:scan ./backend-drf
+
+      - name: Trivy — Scan Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: stock-backend:scan
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
+          output: trivy-backend-report.txt
+
+      - name: Build Frontend Image for Scanning
+        run: |
+          docker build -t stock-frontend:scan ./frontend-react
+
+      - name: Trivy — Scan Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: stock-frontend:scan
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
+          output: trivy-frontend-report.txt
+
+      - name: Trivy — Scan Filesystem
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+
+      - name: Upload Trivy Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-reports
+          path: trivy-*-report.txt
+
+  # ============================================================
+  # Dependency Vulnerability Scan
+  # ============================================================
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Safety
+        run: pip install safety pip-audit
+
+      - name: Safety — Check Python Dependencies
+        working-directory: backend-drf
+        run: |
+          safety check \
+            -r requirements.txt \
+            --output text || true
+
+      - name: Pip-Audit — Detailed Audit
+        working-directory: backend-drf
+        run: |
+          pip-audit \
+            -r requirements.txt \
+            --format=json \
+            -o pip-audit-report.json || true
+          cat pip-audit-report.json
+
+      - name: Upload Audit Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: backend-drf/pip-audit-report.json
+
+  # ============================================================
+  # Secret Scanning — Gitleaks
+  # ============================================================
+  secret-scan:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks — Scan for Secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

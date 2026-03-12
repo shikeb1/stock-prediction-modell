@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+db.sqlite3
+media/
+staticfiles/
+node_modules/
+dist/
+*.keras
+*.h5
