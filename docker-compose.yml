@@ -2,7 +2,7 @@ services:
 
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # NGINX — Single entry point (Port 80 only!)
-  # Frontend + Backend dono yahan se accessible
+  # Frontend + Backend 
   # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   nginx:
     image: nginx:1.25-alpine

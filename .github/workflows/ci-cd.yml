@@ -67,7 +67,7 @@ jobs:
       - name: Run Tests with Coverage
         working-directory: backend-drf
         env:
-          DJANGO_SETTINGS_MODULE: core.settings
+          DJANGO_SETTINGS_MODULE: stock_prediction_main.settings
           DATABASE_URL: postgresql://testuser:testpass123@localhost:5432/test_stockdb
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: test-secret-key-not-for-production
@@ -153,6 +153,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+          cache-dependency-path: 'frontend-react/package.json'
           
 
       - name: Install Dependencies
