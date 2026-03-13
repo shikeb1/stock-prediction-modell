@@ -85,9 +85,9 @@ services:
     image: postgres:15-alpine
     container_name: stock-prediction-db
     environment:
-      - POSTGRES_DB=stock_prediction_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=StrongPass123
+      - POSTGRES_DB= ${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -107,14 +107,16 @@ services:
   redis:
     image: redis:7-alpine
     container_name: stock-prediction-redis
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass redispass123
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    env_file:
+      - .env
     networks:
       - stock-network
     volumes:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "redispass123", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
