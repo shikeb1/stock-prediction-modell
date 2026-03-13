@@ -1,14 +1,14 @@
 """
 Production API Views
 """
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import logging
 import time
 import requests
 import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from datetime import datetime
 
 from django.conf import settings
