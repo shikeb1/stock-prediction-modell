@@ -1,0 +1,228 @@
+# ========================================================================
+# .GITIGNORE - FILES NOT TO COMMIT TO GIT
+# ========================================================================
+#
+# This file tells Git which files to ignore
+# Large files, secrets, generated files - nahi push hote
+#
+# ========================================================================
+
+# ========================================================================
+# PYTHON
+# ========================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========================================================================
+# DJANGO
+# ========================================================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+django_db_backup
+
+# Django migrations (sometimes ignored in development)
+# migrations/*.py
+# !migrations/__init__.py
+
+# ========================================================================
+# NODEJS / NPM / VITE
+# ========================================================================
+node_modules/
+npm-debug.log
+npm-debug.log*
+yarn-error.log
+.npm
+.eslintcache
+dist/
+build/
+.DS_Store
+.env.local
+.env.*.local
+
+# ========================================================================
+# ENVIRONMENT VARIABLES
+# ========================================================================
+.env
+.env.local
+.env.*.local
+.env.dev.local
+.env.test.local
+.env.production.local
+
+# ========================================================================
+# IDE / EDITOR
+# ========================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+.project
+.pydevproject
+.settings
+.classpath
+*.sublime-*
+.vim
+
+# ========================================================================
+# OS
+# ========================================================================
+.DS_Store
+Thumbs.db
+.directory
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================================================================
+# TESTING
+# ========================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+
+# ========================================================================
+# LARGE FILES (Git can't handle these well)
+# ========================================================================
+
+# ML Models
+/resources/*.keras
+/resources/*.h5
+/resources/*.pb
+/resources/*.pth
+/resources/*.ckpt
+
+# Data files
+/resources/*.csv
+/resources/*.xlsx
+/resources/*.json
+
+# Media uploads
+/media/
+/uploads/
+
+# Logs
+/logs/
+*.log
+
+# ========================================================================
+# DOCKER
+# ========================================================================
+.dockerignore
+Dockerfile
+docker-compose.override.yml
+
+# ========================================================================
+# CELERY
+# ========================================================================
+celerybeat-schedule
+
+# ========================================================================
+# GIT
+# ========================================================================
+.gitkeep
+
+# ========================================================================
+# TEMPORARY FILES
+# ========================================================================
+*.tmp
+*.temp
+*.bak
+*.orig
+.backup/
+
+# ========================================================================
+# COMPILED FILES
+# ========================================================================
+*.class
+*.jar
+*.exe
+*.dll
+*.so
+
+# ========================================================================
+# MISC
+# ========================================================================
+.env.bak
+.venv.bak
+*.sqlite
+*.sqlite3
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# ========================================================================
+# SECRET FILES
+# ========================================================================
+# Never commit these!
+secrets/
+credentials.json
+.aws/
+~/.aws/
+
+# ========================================================================
+# SPECIFIC TO THIS PROJECT
+# ========================================================================
+
+# ML Model (too large for Git)
+backend-drf/resources/*.keras
+backend-drf/resources/*.h5
+
+# Virtual environments
+backend-drf/venv/
+frontend-react/node_modules/
+
+# Generated files
+backend-drf/db.sqlite3
+backend-drf/staticfiles/
+backend-drf/.pytest_cache/
+
+# IDE workspace settings
+.idea/
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ========================================================================

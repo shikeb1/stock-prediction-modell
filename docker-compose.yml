@@ -1,0 +1,260 @@
+version: '3.8'
+
+# ========================================================================
+# DOCKER COMPOSE - MULTI-CONTAINER ORCHESTRATION
+# ========================================================================
+# 
+# Ye file sab containers ko organize karta hai:
+# - PostgreSQL (Database)
+# - Redis (Caching)
+# - Backend (Django)
+# - Frontend (React)
+#
+# docker-compose up = sab kuch start ho jayega!
+#
+# ========================================================================
+
+services:
+  
+  # ========================================================================
+  # 1. POSTGRESQL DATABASE
+  # ========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: stock_prediction_postgres
+    
+    environment:
+      POSTGRES_DB: stockdb
+      POSTGRES_USER: stockuser
+      POSTGRES_PASSWORD: stockpass123
+    
+    volumes:
+      # Data persistence - jab container band ho, data nahi delete hota
+      - postgres_data:/var/lib/postgresql/data
+    
+    ports:
+      - "5432:5432"
+    
+    healthcheck:
+      # Server check karta hai ki database ready hai
+      test: ["CMD-SHELL", "pg_isready -U stockuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - stock_network
+  
+  
+  # ========================================================================
+  # 2. REDIS CACHE
+  # ========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: stock_prediction_redis
+    
+    ports:
+      - "6379:6379"
+    
+    volumes:
+      # Redis data persistence
+      - redis_data:/data
+    
+    healthcheck:
+      # Check if Redis is responding
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - stock_network
+  
+  
+  # ========================================================================
+  # 3. DJANGO REST BACKEND
+  # ========================================================================
+  backend:
+    build:
+      context: ./backend-drf
+      dockerfile: Dockerfile
+    container_name: stock_prediction_backend
+    
+    ports:
+      - "8000:8000"
+    
+    environment:
+      # Django settings
+      DEBUG: 'False'
+      SECRET_KEY: django-insecure-your-secret-key-change-in-production
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend,0.0.0.0
+      
+      # Database connection
+      DATABASE_URL: postgresql://stockuser:stockpass123@postgres:5432/stockdb
+      
+      # Redis connection
+      REDIS_URL: redis://redis:6379/0
+      
+      # ML Model path (volume mounted)
+      ML_MODEL_PATH: /app/resources/stock_prediction_model.keras
+      
+      # Logging
+      LOG_LEVEL: INFO
+    
+    depends_on:
+      # Wait for these services
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    volumes:
+      # ML Model - read-only volume mount
+      # Local ./resources → Container /app/resources
+      - ./resources:/app/resources:ro
+      
+      # Logs - persistent logging
+      - ./logs/backend:/app/logs
+    
+    # Startup command
+    command: >
+      sh -c "
+        echo '⏳ Waiting for database...' &&
+        python manage.py migrate --noinput &&
+        echo '✅ Migrations complete' &&
+        python manage.py collectstatic --noinput &&
+        echo '🚀 Starting Gunicorn...' &&
+        gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 60 stock_prediction_main.wsgi:application
+      "
+    
+    networks:
+      - stock_network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  
+  
+  # ========================================================================
+  # 4. REACT FRONTEND
+  # ========================================================================
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    container_name: stock_prediction_frontend
+    
+    ports:
+      - "80:80"
+      - "3000:80"
+    
+    environment:
+      # Backend API URL for frontend
+      VITE_BACKEND_BASE_API: http://localhost:8000/api/v1/
+      VITE_BACKEND_ROOT: http://localhost:8000
+    
+    depends_on:
+      - backend
+    
+    volumes:
+      # Optional: Development mode volume
+      # - ./frontend-react/src:/app/src
+      
+      # Nginx logs
+      - ./logs/frontend:/var/log/nginx
+    
+    networks:
+      - stock_network
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+
+# ========================================================================
+# VOLUMES - DATA PERSISTENCE
+# ========================================================================
+volumes:
+  # PostgreSQL data
+  postgres_data:
+    driver: local
+  
+  # Redis data
+  redis_data:
+    driver: local
+
+
+# ========================================================================
+# NETWORKS - CONTAINER COMMUNICATION
+# ========================================================================
+networks:
+  stock_network:
+    driver: bridge
+
+
+# ========================================================================
+# USAGE COMMANDS
+# ========================================================================
+#
+# 1. BUILD IMAGES:
+#    docker-compose build
+#
+# 2. START ALL SERVICES:
+#    docker-compose up
+#
+# 3. START IN BACKGROUND:
+#    docker-compose up -d
+#
+# 4. VIEW LOGS:
+#    docker-compose logs -f backend
+#    docker-compose logs -f frontend
+#
+# 5. STOP ALL:
+#    docker-compose down
+#
+# 6. REMOVE VOLUMES (clean slate):
+#    docker-compose down -v
+#
+# 7. RESTART SPECIFIC SERVICE:
+#    docker-compose restart backend
+#
+# 8. CHECK STATUS:
+#    docker-compose ps
+#
+# ========================================================================
+# EXPECTED OUTPUT
+# ========================================================================
+#
+# postgres    ✅ running (port 5432)
+# redis       ✅ running (port 6379)
+# backend     ✅ running (port 8000)
+#   └─ http://localhost:8000/api/v1/health/
+# frontend    ✅ running (port 80, 3000)
+#   └─ http://localhost:3000
+#
+# Total time: 30-60 seconds
+#
+# ========================================================================
+# TROUBLESHOOTING
+# ========================================================================
+#
+# Problem: Port already in use
+# Solution: docker-compose down && docker-compose up
+#
+# Problem: Database connection failed
+# Solution: Check DATABASE_URL, wait for postgres healthcheck
+#
+# Problem: Model file not found
+# Solution: mkdir -p resources/
+#           Place stock_prediction_model.keras in resources/
+#
+# Problem: Frontend can't connect to backend
+# Solution: Check VITE_BACKEND_BASE_API matches backend URL
+#
+# ========================================================================
