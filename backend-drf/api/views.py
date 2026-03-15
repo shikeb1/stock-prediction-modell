@@ -59,6 +59,16 @@ def health_check(request):
     )
 
 
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@permission_classes([AllowAny])
+def custom_404(request, exception=None):
+    """Custom 404 handler returning JSON"""
+    return Response(
+        {'detail': 'Not found.', 'status_code': 404},
+        status=status.HTTP_404_NOT_FOUND
+    )
+
+
 def download_stock_data(ticker, start, end):
     """Download stock data from Yahoo Finance."""
     for attempt in range(3):

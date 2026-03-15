@@ -364,10 +364,13 @@ class TestResponseFormat:
         response = api_client.get('/api/v1/nonexistent/')
         
         # Should be JSON
+        assert response.status_code == status.HTTP_404_NOT_FOUND
         assert response['Content-Type'] == 'application/json'
+        
         # Should have meaningful error
         data = response.json()
-        assert isinstance(data, dict)
+        assert 'detail' in data
+        assert data['status_code'] == 404
 
 
 # ========================================================================
@@ -388,8 +391,12 @@ class TestCaching:
         assert response1.status_code == status.HTTP_200_OK
         assert response2.status_code == status.HTTP_200_OK
         
-        # Data might be cached
-        assert response1.data == response2.data
+        # Data might be cached (ignoring timestamp)
+        data1 = response1.json()
+        data2 = response2.json()
+        
+        assert data1['status'] == data2['status']
+        assert data1['services'] == data2['services']
 
 
 # ========================================================================

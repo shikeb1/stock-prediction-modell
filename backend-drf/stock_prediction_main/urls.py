@@ -9,3 +9,5 @@ urlpatterns = [
     path('api/v1/health/', api_views.health_check, name='health'),
     path('api/v1/', include('api.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = 'api.views.custom_404'

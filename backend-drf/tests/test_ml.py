@@ -107,8 +107,8 @@ class TestPredictions:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Create dummy input matching model shape
-                # Assuming (batch=1, timesteps=60, features=5)
-                dummy_input = np.random.randn(1, 60, 5).astype(np.float32)
+                # Assuming (batch=1, timesteps=100, features=1)
+                dummy_input = np.random.randn(1, 100, 1).astype(np.float32)
                 
                 prediction = model.predict(dummy_input, verbose=0)
                 assert prediction is not None
@@ -128,7 +128,7 @@ class TestPredictions:
             if os.path.exists(model_path):
                 model = tf.keras.models.load_model(model_path)
                 
-                dummy_input = np.random.randn(1, 60, 5).astype(np.float32)
+                dummy_input = np.random.randn(1, 100, 1).astype(np.float32)
                 prediction = model.predict(dummy_input, verbose=0)
                 
                 # Stock prices should be positive (usually)
@@ -154,7 +154,7 @@ class TestPredictions:
                 
                 # Create fixed input
                 np.random.seed(42)
-                dummy_input = np.random.randn(1, 60, 5).astype(np.float32)
+                dummy_input = np.random.randn(1, 100, 1).astype(np.float32)
                 
                 # Predict twice
                 pred1 = model.predict(dummy_input, verbose=0)
@@ -187,7 +187,7 @@ class TestBatchProcessing:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Batch of 5 samples
-                batch_input = np.random.randn(5, 60, 5).astype(np.float32)
+                batch_input = np.random.randn(5, 100, 1).astype(np.float32)
                 predictions = model.predict(batch_input, verbose=0)
                 
                 assert predictions.shape[0] == 5
@@ -207,11 +207,11 @@ class TestBatchProcessing:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Single input
-                single_input = np.random.randn(1, 60, 5).astype(np.float32)
+                single_input = np.random.randn(1, 100, 1).astype(np.float32)
                 single_pred = model.predict(single_input, verbose=0)
                 
                 # Same input in batch of 1
-                batch_input = np.random.randn(1, 60, 5).astype(np.float32)
+                batch_input = np.random.randn(1, 100, 1).astype(np.float32)
                 batch_pred = model.predict(batch_input, verbose=0)
                 
                 # Should have same shape
@@ -262,7 +262,7 @@ class TestMLErrorHandling:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Empty batch
-                empty_input = np.array([]).reshape(0, 60, 5).astype(np.float32)
+                empty_input = np.array([]).reshape(0, 100, 1).astype(np.float32)
                 
                 with pytest.raises((ValueError, Exception)):
                     model.predict(empty_input, verbose=0)
@@ -282,7 +282,7 @@ class TestMLErrorHandling:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Input with NaN
-                nan_input = np.full((1, 60, 5), np.nan).astype(np.float32)
+                nan_input = np.full((1, 100, 1), np.nan).astype(np.float32)
                 
                 # Should handle or raise error
                 try:
@@ -317,7 +317,7 @@ class TestMLPerformance:
             if os.path.exists(model_path):
                 model = tf.keras.models.load_model(model_path)
                 
-                dummy_input = np.random.randn(1, 60, 5).astype(np.float32)
+                dummy_input = np.random.randn(1, 100, 1).astype(np.float32)
                 
                 start = time.time()
                 model.predict(dummy_input, verbose=0)
@@ -344,7 +344,7 @@ class TestMLPerformance:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Larger batch
-                batch_input = np.random.randn(32, 60, 5).astype(np.float32)
+                batch_input = np.random.randn(32, 100, 1).astype(np.float32)
                 
                 start = time.time()
                 model.predict(batch_input, verbose=0)
@@ -409,7 +409,7 @@ class TestDataTypes:
             if os.path.exists(model_path):
                 model = tf.keras.models.load_model(model_path)
                 
-                input_f32 = np.random.randn(1, 60, 5).astype(np.float32)
+                input_f32 = np.random.randn(1, 100, 1).astype(np.float32)
                 pred = model.predict(input_f32, verbose=0)
                 
                 assert pred is not None
@@ -429,7 +429,7 @@ class TestDataTypes:
                 model = tf.keras.models.load_model(model_path)
                 
                 # Float64 input
-                input_f64 = np.random.randn(1, 60, 5).astype(np.float64)
+                input_f64 = np.random.randn(1, 100, 1).astype(np.float64)
                 
                 # Should handle conversion
                 try:
