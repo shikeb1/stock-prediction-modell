@@ -1,10 +1,10 @@
 """
 Security Module — Production Security
 =======================================
-1. Ticker Blacklist — Dangerous/invalid inputs block karo
-2. Input Sanitization — Clean & validate all inputs
-3. Rate Limiting helpers
-4. Security event logging
+1. Ticker Blacklist    — Block dangerous or invalid ticker inputs
+2. Input Sanitization — Clean and validate all user inputs
+3. Rate Limiting      — Helpers to enforce per-user request limits
+4. Security Logging   — Structured logging of security events
 """
 import re
 import logging
@@ -13,7 +13,7 @@ from django.core.cache import cache
 logger = logging.getLogger('security')
 
 # ============================================================
-# TICKER BLACKLIST — Ye tickers dangerous ya invalid hain
+# TICKER BLACKLIST — These tickers are dangerous or invalid
 # ============================================================
 BLACKLISTED_TICKERS = {
     # SQL injection attempts
@@ -36,11 +36,11 @@ RATE_LIMIT_PER_MINUTE = 5
 
 def validate_ticker(ticker: str) -> tuple[bool, str]:
     """
-    Ticker validate karo.
+    Validate the given ticker symbol.
     Returns: (is_valid: bool, error_message: str)
     """
     if not ticker:
-        return False, "Ticker empty hai!"
+        return False, "Ticker cannot be empty."
 
     ticker = ticker.upper().strip()
 
@@ -63,7 +63,7 @@ def validate_ticker(ticker: str) -> tuple[bool, str]:
 
 def check_rate_limit(identifier: str, limit_type: str = 'hour') -> tuple[bool, int]:
     """
-    Rate limit check karo.
+    Check whether the given identifier has exceeded the rate limit.
     Returns: (is_allowed: bool, remaining_requests: int)
     """
     if limit_type == 'minute':
@@ -85,13 +85,13 @@ def check_rate_limit(identifier: str, limit_type: str = 'hour') -> tuple[bool, i
     try:
         cache.set(cache_key, current + 1, timeout)
     except Exception:
-        pass  # Cache fail hone pe block mat karo
+        pass  # Do not block the request if cache write fails
 
     return True, limit - current - 1
 
 
 def get_client_ip(request) -> str:
-    """Real client IP lo (proxy ke peeche se bhi)"""
+    """Extract the real client IP address, including from behind a proxy."""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
         return x_forwarded_for.split(',')[0].strip()
@@ -99,7 +99,7 @@ def get_client_ip(request) -> str:
 
 
 def log_security_event(event_type: str, details: dict, request=None):
-    """Security events structured log karo"""
+    """Log a structured security event with relevant request metadata."""
     log_data = {
         "event": event_type,
         **details,

@@ -40,14 +40,14 @@ def get_model():
         logger.info(f"Loading model from: {model_path}")
 
         try:
-            # Step 1: Weights extract karo
+            # Step 1: Extract weights from the .keras zip archive
             weights_path = '/tmp/weights.h5'
             with zipfile.ZipFile(model_path, 'r') as z:
                 with z.open('model.weights.h5') as src, open(weights_path, 'wb') as dst:
                     dst.write(src.read())
             logger.info("Weights extracted!")
 
-            # Step 2: Architecture banao
+            # Step 2: Rebuild the model architecture
             model = Sequential()
             model.add(Input(shape=(100, 1)))
             model.add(LSTM(units=128, activation='tanh', return_sequences=True))
@@ -56,10 +56,10 @@ def get_model():
             model.add(Dense(1))
             model.compile(optimizer='adam', loss='mean_squared_error')
 
-            # Step 3: Weights initialize karo
+            # Step 3: Initialize model weights with a dummy prediction
             model.predict(np.zeros((1, 100, 1)), verbose=0)
 
-            # Step 4: Weights manually load karo
+            # Step 4: Manually load weights from the extracted h5 file
             with h5py.File(weights_path, 'r') as f:
                 model.layers[0].set_weights([
                     f['layers/lstm/cell/vars/0'][:],

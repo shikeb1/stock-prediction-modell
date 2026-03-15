@@ -80,25 +80,22 @@ services:
       dockerfile: Dockerfile
     container_name: stock_prediction_backend
     
-    ports:
-      - "8000:8000"
+    # Internal port only (8000), no host mapping since Nginx proxies it
+    # ports:
+    #   - "8000:8000"
     
+    # Load base config from .env file
+    env_file:
+      - ./backend-drf/.env
+
     environment:
-      # Django settings
+      # Docker-specific overrides (these take priority over .env)
       DEBUG: 'False'
       SECRET_KEY: django-insecure-your-secret-key-change-in-production
       ALLOWED_HOSTS: localhost,127.0.0.1,backend,0.0.0.0
-      
-      # Database connection
       DATABASE_URL: postgresql://stockuser:stockpass123@postgres:5432/stockdb
-      
-      # Redis connection
       REDIS_URL: redis://redis:6379/0
-      
-      # ML Model path (volume mounted)
       ML_MODEL_PATH: /app/resources/stock_prediction_model.keras
-      
-      # Logging
       LOG_LEVEL: INFO
     
     depends_on:
@@ -115,6 +112,9 @@ services:
       
       # Logs - persistent logging
       - ./logs/backend:/app/logs
+      
+      # Media - shared plots
+      - ./media:/app/media
     
     # Startup command
     command: >
@@ -139,7 +139,7 @@ services:
   
   
   # ========================================================================
-  # 4. REACT FRONTEND
+  # 4. REACT FRONTEND (Reverse Proxy + UI)
   # ========================================================================
   frontend:
     build:
@@ -148,23 +148,19 @@ services:
     container_name: stock_prediction_frontend
     
     ports:
-      - "80:80"
       - "3000:80"
     
+    volumes:
+      - ./media:/usr/share/nginx/html/media:ro
+      - ./logs/frontend:/var/log/nginx
+    
     environment:
-      # Backend API URL for frontend
-      VITE_BACKEND_BASE_API: http://localhost:8000/api/v1/
-      VITE_BACKEND_ROOT: http://localhost:8000
+      # Backend API URL for frontend (Relative path for single-origin)
+      VITE_BACKEND_BASE_API: /api/v1/
+      VITE_BACKEND_ROOT: ""
     
     depends_on:
       - backend
-    
-    volumes:
-      # Optional: Development mode volume
-      # - ./frontend-react/src:/app/src
-      
-      # Nginx logs
-      - ./logs/frontend:/var/log/nginx
     
     networks:
       - stock_network

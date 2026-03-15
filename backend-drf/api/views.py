@@ -14,7 +14,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.response import Response
@@ -33,18 +33,22 @@ PREDICTION_CACHE_TIMEOUT = 3600
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@api_view(['GET'])
-@permission_classes([AllowAny])
+@throttle_classes([])
 def health_check(request):
     """Health check endpoint"""
+    model_status = 'loaded' if is_model_loaded() else 'not_loaded'
+    model_info = get_model_info()
+    if model_info.get('error'):
+        model_status = f"error: {model_info['error']}"
+
     health_status = {
         'status': 'healthy',
-        'message': 'API is running successfully',
+        'message': 'API is running',
         'timestamp': datetime.now().isoformat(),
         'services': {
             'database': 'healthy',
             'redis': 'healthy',
-            'ml_model': 'loaded'
+            'ml_model': model_status
         }
     }
     
@@ -56,33 +60,31 @@ def health_check(request):
 
 
 def download_stock_data(ticker, start, end):
-    """Yahoo Finance se data download karo — retry + browser headers"""
-    session = requests.Session()
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-    })
-
+    """Download stock data from Yahoo Finance."""
     for attempt in range(3):
         try:
+            # Simple download is often more robust with current yfinance
             df = yf.download(
                 ticker,
                 start=start,
                 end=end,
                 progress=False,
-                session=session
+                auto_adjust=True
             )
+            
             if not df.empty:
+                # Handle MultiIndex if present
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                
                 logger.info(f"Download success on attempt {attempt + 1}")
                 return df
+                
             logger.warning(f"Empty data on attempt {attempt + 1}, retrying...")
-            time.sleep(3)
+            time.sleep(2)
         except Exception as e:
-            logger.warning(f"Download attempt {attempt + 1} failed: {e}")
-            time.sleep(3)
+            logger.warning(f"Download attempt {attempt + 1} failed: {str(e)}")
+            time.sleep(2)
 
     return pd.DataFrame()
 
@@ -97,12 +99,12 @@ class StockPredictionAPIView(APIView):
         allowed_min, _ = check_rate_limit(f"{username}_min", 'minute')
         if not allowed_min:
             log_security_event("RATE_LIMIT_MINUTE", {"user": username}, request)
-            return Response({'error': 'Too many requests! 1 minute baad try karo.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response({'error': 'Too many requests. Please wait 1 minute before trying again.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         allowed_hour, remaining = check_rate_limit(f"{username}_hour", 'hour')
         if not allowed_hour:
             log_security_event("RATE_LIMIT_HOUR", {"user": username}, request)
-            return Response({'error': 'Hourly limit exceeded! Thodi der baad try karo.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response({'error': 'Hourly request limit exceeded. Please try again later.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
         serializer = StockPredictionSerializer(data=request.data)
         if not serializer.is_valid():
@@ -141,7 +143,7 @@ class StockPredictionAPIView(APIView):
             return Response({'error': 'Stock data download failed.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         if df.empty:
-            return Response({'error': f'"{ticker}" ka data nahi mila. Ticker sahi hai? Ya Yahoo Finance slow hai, 2 min baad try karo.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response({'error': f'No data found for "{ticker}". Is the ticker correct? Yahoo Finance may be slow — please try again in 2 minutes.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         if len(df) < 200:
             return Response({'error': f'Insufficient data for "{ticker}" ({len(df)} days). Need 200+ days.'}, status=status.HTTP_400_BAD_REQUEST)
