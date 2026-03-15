@@ -236,6 +236,7 @@ class TestRateLimiting:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestErrorHandling:
     """Error handling and validation tests"""
     
@@ -279,6 +280,7 @@ class TestErrorHandling:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestSecurityHeaders:
     """CORS and security header tests"""
     
@@ -348,6 +350,7 @@ class TestConcurrency:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestResponseFormat:
     """API response format validation"""
     
@@ -372,6 +375,7 @@ class TestResponseFormat:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestCaching:
     """Caching behavior tests"""
     
