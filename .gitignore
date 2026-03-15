@@ -204,9 +204,11 @@ credentials.json
 # SPECIFIC TO THIS PROJECT
 # ========================================================================
 
-# ML Model (too large for Git)
-backend-drf/resources/*.keras
-backend-drf/resources/*.h5
+# ML Model (Included for CI/CD, though usually large)
+!backend-drf/resources/*.keras
+!backend-drf/resources/*.h5
+!resources/*.keras
+!resources/*.h5
 
 # Virtual environments
 backend-drf/venv/
