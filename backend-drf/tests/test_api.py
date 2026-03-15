@@ -26,6 +26,7 @@ import json
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestHealthCheck:
     """Health check endpoint tests"""
     
@@ -41,15 +42,16 @@ class TestHealthCheck:
         assert 'timestamp' in data
         assert 'services' in data
         assert 'database' in data['services']
-        assert 'cache' in data['services']
+        assert 'redis' in data['services']
+        assert 'ml_model' in data['services']
     
     def test_health_check_services_up(self, api_client):
         """✅ Test all services are up"""
         response = api_client.get('/api/v1/health/')
         data = response.json()
         
-        assert data['services']['database'] == 'up'
-        assert data['services']['cache'] == 'up'
+        assert data['services']['database'] == 'healthy'
+        assert data['services']['redis'] == 'healthy'
     
     def test_health_check_no_auth_required(self, api_client):
         """✅ Test health check doesn't require authentication"""
@@ -63,6 +65,7 @@ class TestHealthCheck:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestUserAuthentication:
     """User registration and login tests"""
     
@@ -132,6 +135,7 @@ class TestUserAuthentication:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestPredictionAPI:
     """Stock prediction endpoint tests"""
     
@@ -201,6 +205,7 @@ class TestPredictionAPI:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestRateLimiting:
     """Rate limiting and security tests"""
     
@@ -300,6 +305,7 @@ class TestSecurityHeaders:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestPagination:
     """Pagination and filtering tests"""
     
@@ -319,6 +325,7 @@ class TestPagination:
 # ========================================================================
 
 @pytest.mark.integration
+@pytest.mark.django_db
 class TestConcurrency:
     """Concurrent request handling"""
     
