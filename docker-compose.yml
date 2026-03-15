@@ -107,8 +107,8 @@ services:
     
     volumes:
       # ML Model - read-only volume mount
-      # Local ./resources → Container /app/resources
-      - ./resources:/app/resources:ro
+      # Local ./backend-drf/resources → Container /app/resources
+      - ./backend-drf/resources:/app/resources:ro
       
       # Logs - persistent logging
       - ./logs/backend:/app/logs

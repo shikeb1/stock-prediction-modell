@@ -21,7 +21,7 @@ jobs:
 
       - name: Build Backend Image for Scanning
         run: |
-          docker build -t stock-backend:scan ./backend-drf
+          docker build -t stock-backend:scan -f ./backend-drf/Dockerfile ./backend-drf
 
       - name: Trivy — Scan Backend Image
         uses: aquasecurity/trivy-action@master
@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Frontend Image for Scanning
         run: |
-          docker build -t stock-frontend:scan ./frontend-react
+          docker build -t stock-frontend:scan -f ./frontend-react/Dockerfile ./frontend-react
 
       - name: Trivy — Scan Frontend Image
         uses: aquasecurity/trivy-action@master
