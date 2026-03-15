@@ -148,7 +148,8 @@ coverage.xml
 # DOCKER
 # ========================================================================
 .dockerignore
-Dockerfile
+# Dockerfile (Unignored so it can be committed)
+!Dockerfile
 docker-compose.override.yml
 
 # ========================================================================
