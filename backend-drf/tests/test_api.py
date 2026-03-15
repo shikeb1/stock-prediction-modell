@@ -140,10 +140,11 @@ class TestPredictionAPI:
         response = auth_client.post('/api/v1/predict/', ml_model_data)
         
         assert response.status_code == status.HTTP_200_OK
-        assert 'prediction' in response.data
         assert 'ticker' in response.data
-        assert 'dates' in response.data
-        assert 'confidence' in response.data
+        assert 'plot_prediction' in response.data
+        assert 'mse' in response.data
+        assert 'r2' in response.data
+        assert 'current_price' in response.data
     
     def test_predict_requires_auth(self, api_client, ml_model_data):
         """✅ Test prediction requires authentication"""
